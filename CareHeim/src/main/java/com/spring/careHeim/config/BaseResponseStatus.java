@@ -39,7 +39,14 @@ public enum BaseResponseStatus {
      * 500 : Database, Server 오류
      */
     DATABASE_ERROR(false, HttpStatus.INTERNAL_SERVER_ERROR.value(), "데이터베이스 연결에 실패하였습니다."),
-    SERVER_ERROR(false, HttpStatus.INTERNAL_SERVER_ERROR.value(), "서버와의 연결에 실패하였습니다.");
+    SERVER_ERROR(false, HttpStatus.INTERNAL_SERVER_ERROR.value(), "서버와의 연결에 실패하였습니다."),
+
+    /**
+     * user error
+     */
+    USERS_DONT_EXIST(false, 4001, "존재하지 않는 user입니다."),
+    CLOTHE_ALREADY_EXIST(false, 202, "동일한 의류 정보가 이미 존재합니다.")
+    ;
 
 
     private final boolean isSuccess;

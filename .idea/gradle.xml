@@ -4,21 +4,10 @@
   <component name="GradleSettings">
     <option name="linkedExternalProjectsSettings">
       <GradleProjectSettings>
-        <option name="externalProjectPath" value="$PROJECT_DIR$/CareHeim-Server" />
-        <option name="gradleJvm" value="#JAVA_HOME" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$/CareHeim" />
         <option name="modules">
           <set>
-            <option value="$PROJECT_DIR$/CareHeim-Server" />
-          </set>
-        </option>
-      </GradleProjectSettings>
-      <GradleProjectSettings>
-        <option name="externalProjectPath" value="$PROJECT_DIR$/CareHeim-server" />
-        <option name="gradleHome" value="" />
-        <option name="gradleJvm" value="#JAVA_HOME" />
-        <option name="modules">
-          <set>
-            <option value="$PROJECT_DIR$/CareHeim-Server" />
+            <option value="$PROJECT_DIR$/CareHeim" />
           </set>
         </option>
       </GradleProjectSettings>
