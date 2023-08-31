@@ -8,16 +8,23 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 
 public interface ClotheDocumentRepository extends MongoRepository<ClotheDocument, String> {
-    @Query(value = "{ 'userId': :#{#userID}," +
-            "'clothes': " +
-            "{ $elemMatch: { 'type': :#{#type}, 'pattern': :#{#ptn}, " +
+    @Query(value = "{ 'uuid': :#{#uuid}, " +
+            "'type': :#{#type}, 'pattern': :#{#ptn}, " +
+            "'colors': { $all: :#{#colors} }, " +
+            "'nickName': :#{#nickName} }", count = true)
+    Integer countByUuidAndTypeAndPtnAndColorsAndNickName(@Param("uuid") String uuid,
+                                                                @Param("type") int type,
+                                                                @Param("ptn") int ptn,
+                                                                @Param("colors") String[] colors,
+                                                                @Param("nickName") String nickName);
+    @Query(value = "{ 'uuid': :#{#uuid}," +
+            "'type': :#{#type}, 'pattern': :#{#ptn}, " +
             "'colors': { $all: :#{#colors} }, 'features': { $all: :#{#features} }, " +
-            "'nickName': :#{#nickName} }" +
-            "}}")
-    int countByUuidAndTypeAndPtnAndColorsAndFeaturesAndNickName(@Param("userID") String userId,
+            "'nickName': :#{#nickName} }", count = true)
+    Integer countByUuidAndTypeAndPtnAndColorsAndFeaturesAndNickName(@Param("uuid") String uuid,
                                                                   @Param("type") int type,
                                                                   @Param("ptn") int ptn,
-                                                                  @Param("colors") List<String> colors,
-                                                                  @Param("features") List<String> features,
+                                                                  @Param("colors") String[] colors,
+                                                                  @Param("features") String[] features,
                                                                   @Param("nickName") String nickName);
 }

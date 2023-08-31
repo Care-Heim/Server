@@ -6,16 +6,18 @@ import com.spring.careHeim.domain.common.BaseEntity;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-@AllArgsConstructor
+@RequiredArgsConstructor
 @Getter
 @Builder
 @Document(collection = "clothes")
@@ -37,12 +39,25 @@ public class ClotheDocument {
     private LocalDateTime updatedAt;
     private DocumentStatus status;
 
-    public ClotheDocument(ClotheInfo clotheInfo) {
+    public ClotheDocument(String uuid, ClotheInfo clotheInfo) {
+        this.uuid = uuid;
         this.type = clotheInfo.getType();
         this.pattern = clotheInfo.getPtn();
         this.colors = clotheInfo.getColors();
         this.features = clotheInfo.getFeatures();
         this.nickName = clotheInfo.getNickName();
+    }
+
+    @PersistenceConstructor
+    private ClotheDocument(String clotheId, String uuid, Integer type, Integer pattern,
+                           List<String> colors, List<String> features, String nickName,
+                           String image, List<String> careInfos, LocalDateTime createdAt, LocalDateTime updatedAt, DocumentStatus status) {
+        this.clotheId = clotheId; this.uuid = uuid;
+        this.type = type; this.pattern = pattern;
+        this.colors = colors; this.features = features;
+        this.nickName = nickName; this.image = image;
+        this.careInfos = careInfos; this.createdAt = createdAt;
+        this.updatedAt = updatedAt; this.status = status;
     }
 
     public enum DocumentStatus {

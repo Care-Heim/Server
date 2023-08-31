@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
+import static com.spring.careHeim.config.BaseResponseStatus.CREATED;
 import static com.spring.careHeim.config.BaseResponseStatus.SUCCESS;
 
 @Slf4j
@@ -15,22 +16,23 @@ import static com.spring.careHeim.config.BaseResponseStatus.SUCCESS;
 @RequiredArgsConstructor
 @RequestMapping("/clothes")
 public class ClotheController {
-    private final UserService userService;
+    private final ClotheService clotheService;
 
     /**
      * 의류등록 API
      * [POST] /clothes/enroll
      * @return BaseResponse<SinglePostRes>
-     **/
+     */
     @ResponseBody
     @PostMapping("/enroll")
     public BaseResponse<String> addNewClothe(@RequestBody ClotheInfo clotheInfo) {
         try {
-            userService.addNewClothe(clotheInfo);
+            clotheService.addNewClothe(clotheInfo);
 
-            return new BaseResponse<>(SUCCESS);
+            return new BaseResponse<>(CREATED);
         } catch (BaseException e) {
             return new BaseResponse<>(e.getStatus());
         }
     }
+
 }

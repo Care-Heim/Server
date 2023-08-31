@@ -12,6 +12,7 @@ public enum BaseResponseStatus {
      * 200 : 요청 성공
      */
     SUCCESS(true, HttpStatus.OK.value(), "요청에 성공하였습니다."),
+    CREATED(true, HttpStatus.CREATED.value(), "저장에 성공했습니다."),
 
 
     /**

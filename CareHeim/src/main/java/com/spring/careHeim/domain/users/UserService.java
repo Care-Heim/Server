@@ -22,32 +22,12 @@ import static com.spring.careHeim.config.BaseResponseStatus.CLOTHE_ALREADY_EXIST
 @RequiredArgsConstructor
 public class UserService {
     private final UserRepository userRepository;
-    private final ClotheService clotheService;
-    private final ClotheDocumentRepository clotheDocumentRepository;
-
-    public void addNewClothe(ClotheInfo clotheInfo) throws BaseException {
-        User defaultUser = getDefaultUser();
-        addNewClothe(defaultUser, clotheInfo);
-    }
-
-    @Transactional
-    public void addNewClothe(User user, ClotheInfo clotheInfo) throws BaseException {
-        User nowUser = userRepository.findById(user.getUserId()).orElseThrow(() -> new BaseException(BaseResponseStatus.USERS_DONT_EXIST));
-
-        if(clotheService.hasSameClothe(user, clotheInfo)) {
-            throw new BaseException(CLOTHE_ALREADY_EXIST);
-        } else {
-            ClotheDocument newClothe = new ClotheDocument(clotheInfo);
-
-            clotheDocumentRepository.save(newClothe);
-        }
-    }
-
 
     public User getDefaultUser() {
         Optional<User> nowUser = userRepository.findById(1L);
         System.out.println("**********");
         System.out.println("findUser!");
+        System.out.println("**********");
 
         if(nowUser == null) {
             return null;
