@@ -2,6 +2,7 @@ package com.spring.careHeim.domain.clothes;
 
 import com.spring.careHeim.config.BaseException;
 import com.spring.careHeim.config.BaseResponse;
+import com.spring.careHeim.domain.clothes.model.CareInfo;
 import com.spring.careHeim.domain.clothes.model.ClotheInfo;
 import com.spring.careHeim.domain.users.UserService;
 import lombok.RequiredArgsConstructor;
@@ -35,4 +36,19 @@ public class ClotheController {
         }
     }
 
+    /**
+     * 세탁정보 저장 API
+     *  [POST] /clothes/careInfos/enroll
+     */
+    @ResponseBody
+    @PostMapping("/careInfos/enroll")
+    public BaseResponse<String> addCareInfos(@RequestBody CareInfo careInfo) {
+        try {
+            clotheService.addCareInfos(careInfo);
+
+            return new BaseResponse<>(CREATED);
+        } catch (BaseException e) {
+            return new BaseResponse<>(e.getStatus());
+        }
+    }
 }

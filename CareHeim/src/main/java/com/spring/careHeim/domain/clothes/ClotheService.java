@@ -3,17 +3,18 @@ package com.spring.careHeim.domain.clothes;
 import com.spring.careHeim.config.BaseException;
 import com.spring.careHeim.config.BaseResponseStatus;
 import com.spring.careHeim.domain.clothes.document.ClotheDocument;
+import com.spring.careHeim.domain.clothes.model.CareInfo;
 import com.spring.careHeim.domain.clothes.model.ClotheInfo;
 import com.spring.careHeim.domain.users.UserRepository;
 import com.spring.careHeim.domain.users.UserService;
 import com.spring.careHeim.domain.users.entity.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import static com.spring.careHeim.config.BaseResponseStatus.CLOTHE_ALREADY_EXIST;
-import static com.spring.careHeim.config.BaseResponseStatus.DATABASE_ERROR;
+import static com.spring.careHeim.config.BaseResponseStatus.*;
 
 @Slf4j
 @Service
@@ -56,11 +57,6 @@ public class ClotheService {
         }
     }
 
-    public void addNewClothe(ClotheInfo clotheInfo) throws BaseException {
-        User defaultUser = userService.getDefaultUser();
-        addNewClothe(defaultUser, clotheInfo);
-    }
-
     @Transactional
     public void addNewClothe(User user, ClotheInfo clotheInfo) throws BaseException {
         User nowUser = userRepository.findById(user.getUserId()).orElseThrow(() -> new BaseException(BaseResponseStatus.USERS_DONT_EXIST));
@@ -72,5 +68,27 @@ public class ClotheService {
 
             clotheDocumentRepository.save(newClothe);
         }
+    }
+
+    public void addCareInfos(User user, CareInfo careInfo) throws BaseException {
+        User nowUser = userRepository.findById(user.getUserId()).orElseThrow(() -> new BaseException(BaseResponseStatus.USERS_DONT_EXIST));
+
+        ClotheDocument clotheDocument = clotheDocumentRepository.findById(new ObjectId(careInfo.getClotheId())).orElseThrow(() -> new BaseException(CLOTHE_DONT_EXIST));
+
+        clotheDocument.addCareInfos(careInfo.getCareInfos());
+
+        clotheDocumentRepository.save(clotheDocument);
+    }
+
+    /** DefaultUser 처리용 override, 차후 User 구별 시 삭제 예정 **/
+
+    public void addNewClothe(ClotheInfo clotheInfo) throws BaseException {
+        User defaultUser = userService.getDefaultUser();
+        addNewClothe(defaultUser, clotheInfo);
+    }
+
+    public void addCareInfos(CareInfo careInfo) throws BaseException {
+        User defaultuser = userService.getDefaultUser();
+        addCareInfos(defaultuser, careInfo);
     }
 }

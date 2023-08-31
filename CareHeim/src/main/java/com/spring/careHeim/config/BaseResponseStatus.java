@@ -43,10 +43,11 @@ public enum BaseResponseStatus {
     SERVER_ERROR(false, HttpStatus.INTERNAL_SERVER_ERROR.value(), "서버와의 연결에 실패하였습니다."),
 
     /**
-     * user error
+     * error
      */
-    USERS_DONT_EXIST(false, 4001, "존재하지 않는 user입니다."),
-    CLOTHE_ALREADY_EXIST(false, 202, "동일한 의류 정보가 이미 존재합니다.")
+    USERS_DONT_EXIST(false, 2001, "존재하지 않는 user입니다."),
+    CLOTHE_ALREADY_EXIST(false, 2002, "동일한 의류 정보가 이미 존재합니다."),
+    CLOTHE_DONT_EXIST(false, 2003, "존재하지 않는 의류입니다.")
     ;
 
 
