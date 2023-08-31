@@ -1,13 +1,14 @@
 package com.spring.careHeim.domain.clothes;
 
 import com.spring.careHeim.domain.clothes.document.ClotheDocument;
+import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
-public interface ClotheDocumentRepository extends MongoRepository<ClotheDocument, String> {
+public interface ClotheDocumentRepository extends MongoRepository<ClotheDocument, ObjectId> {
     @Query(value = "{ 'uuid': :#{#uuid}, " +
             "'type': :#{#type}, 'pattern': :#{#ptn}, " +
             "'colors': { $all: :#{#colors} }, " +

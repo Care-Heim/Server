@@ -1,18 +1,16 @@
 package com.spring.careHeim.domain.clothes.document;
 
 import com.spring.careHeim.domain.clothes.model.ClotheInfo;
-import com.spring.careHeim.domain.common.BaseEntity;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import org.bson.types.ObjectId;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.annotation.PersistenceConstructor;
 import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.mongodb.core.mapping.Field;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -23,8 +21,7 @@ import java.util.List;
 @Document(collection = "clothes")
 public class ClotheDocument {
     @Id
-    @Field("clotheId")
-    private String clotheId;
+    private ObjectId clotheId;
     private String uuid;
     private Integer type;
     private Integer pattern;
@@ -49,7 +46,7 @@ public class ClotheDocument {
     }
 
     @PersistenceConstructor
-    private ClotheDocument(String clotheId, String uuid, Integer type, Integer pattern,
+    private ClotheDocument(ObjectId clotheId, String uuid, Integer type, Integer pattern,
                            List<String> colors, List<String> features, String nickName,
                            String image, List<String> careInfos, LocalDateTime createdAt, LocalDateTime updatedAt, DocumentStatus status) {
         this.clotheId = clotheId; this.uuid = uuid;
@@ -58,6 +55,10 @@ public class ClotheDocument {
         this.nickName = nickName; this.image = image;
         this.careInfos = careInfos; this.createdAt = createdAt;
         this.updatedAt = updatedAt; this.status = status;
+    }
+
+    public void addCareInfos(List<String> careInfos) {
+        this.careInfos = careInfos;
     }
 
     public enum DocumentStatus {
