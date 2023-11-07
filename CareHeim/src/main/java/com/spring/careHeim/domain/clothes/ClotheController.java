@@ -3,11 +3,13 @@ package com.spring.careHeim.domain.clothes;
 import com.spring.careHeim.config.BaseException;
 import com.spring.careHeim.config.BaseResponse;
 import com.spring.careHeim.domain.clothes.model.CareInfo;
-import com.spring.careHeim.domain.clothes.model.ClotheInfo;
-import com.spring.careHeim.domain.users.UserService;
+import com.spring.careHeim.domain.clothes.model.ClotheRequest;
+import com.spring.careHeim.domain.clothes.model.ClotheResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 import static com.spring.careHeim.config.BaseResponseStatus.CREATED;
 import static com.spring.careHeim.config.BaseResponseStatus.SUCCESS;
@@ -26,7 +28,7 @@ public class ClotheController {
      */
     @ResponseBody
     @PostMapping("/enroll")
-    public BaseResponse<String> addNewClothe(@RequestBody ClotheInfo clotheInfo) {
+    public BaseResponse<String> addNewClothe(@RequestBody ClotheRequest clotheInfo) {
         try {
             clotheService.addNewClothe(clotheInfo);
 
@@ -51,4 +53,21 @@ public class ClotheController {
             return new BaseResponse<>(e.getStatus());
         }
     }
+
+    /**
+     * 의류 정보 요청 API
+     *  [GET] /clothes
+     */
+    @ResponseBody
+    @GetMapping
+    public BaseResponse<ClotheResponse> requestRecentClotheInfos() {
+        try {
+            ClotheResponse clotheResponse = clotheService.findRecentClothe();
+
+            return new BaseResponse<>(clotheResponse);
+        } catch (BaseException e) {
+            return new BaseResponse<>(e.getStatus());
+        }
+    }
+
 }

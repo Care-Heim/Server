@@ -9,10 +9,10 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor(force = true)
 @Builder
-public class ClotheInfo {
+public class ClotheRequest {
     private int type;
     private int ptn;
     private List<String> colors;
     private List<String> features;
-    private String nickName;
+    private String nickname;
 }

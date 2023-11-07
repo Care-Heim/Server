@@ -4,7 +4,8 @@ import com.spring.careHeim.config.BaseException;
 import com.spring.careHeim.config.BaseResponseStatus;
 import com.spring.careHeim.domain.clothes.document.ClotheDocument;
 import com.spring.careHeim.domain.clothes.model.CareInfo;
-import com.spring.careHeim.domain.clothes.model.ClotheInfo;
+import com.spring.careHeim.domain.clothes.model.ClotheRequest;
+import com.spring.careHeim.domain.clothes.model.ClotheResponse;
 import com.spring.careHeim.domain.users.UserRepository;
 import com.spring.careHeim.domain.users.UserService;
 import com.spring.careHeim.domain.users.entity.User;
@@ -23,21 +24,21 @@ public class ClotheService {
     private final UserService userService;
     private final UserRepository userRepository;
     private final ClotheDocumentRepository clotheDocumentRepository;
-    public boolean hasSameClothe(User user, ClotheInfo clotheInfo) throws BaseException{
+    public boolean hasSameClothe(User user, ClotheRequest clotheInfo) throws BaseException{
         Integer cnt = 0;
         if(clotheInfo.getFeatures() == null) {
             cnt = clotheDocumentRepository.countByUuidAndTypeAndPtnAndColorsAndNickName(user.getUuid(),
                     clotheInfo.getType(),
                     clotheInfo.getPtn(),
                     clotheInfo.getColors().toArray(new String[clotheInfo.getColors().size()]),
-                    clotheInfo.getNickName());
+                    clotheInfo.getNickname());
         } else {
             cnt = clotheDocumentRepository.countByUuidAndTypeAndPtnAndColorsAndFeaturesAndNickName(user.getUuid(),
                     clotheInfo.getType(),
                     clotheInfo.getPtn(),
                     clotheInfo.getColors().toArray(new String[clotheInfo.getColors().size()]),
                     clotheInfo.getFeatures().toArray(new String[clotheInfo.getFeatures().size()]),
-                    clotheInfo.getNickName());
+                    clotheInfo.getNickname());
         }
 
         if(cnt == null) {
@@ -58,7 +59,7 @@ public class ClotheService {
     }
 
     @Transactional
-    public void addNewClothe(User user, ClotheInfo clotheInfo) throws BaseException {
+    public void addNewClothe(User user, ClotheRequest clotheInfo) throws BaseException {
         User nowUser = userRepository.findById(user.getUserId()).orElseThrow(() -> new BaseException(BaseResponseStatus.USERS_DONT_EXIST));
 
         if(hasSameClothe(user, clotheInfo)) {
@@ -80,9 +81,32 @@ public class ClotheService {
         clotheDocumentRepository.save(clotheDocument);
     }
 
+    public ClotheResponse findRecentClothe(User user) throws BaseException {
+        User nowUser = userRepository.findById(user.getUserId()).orElseThrow(() -> new BaseException(BaseResponseStatus.USERS_DONT_EXIST));
+
+        ClotheDocument clotheDocument = clotheDocumentRepository.findRecentClothe(nowUser.getUuid());
+
+        if(clotheDocument == null) {
+            throw new BaseException(RECENT_CLOTHE_DONT_EXIST);
+        }
+
+        if(clotheDocument.getCareInfos() != null) {
+            throw new BaseException(CAREINFO_ALREADY_ENROLL);
+        } else {
+            ClotheResponse clotheResponse = ClotheResponse.builder()
+                    .clotheId(String.valueOf(clotheDocument.getClotheId()))
+                    .type(clotheDocument.getType())
+                    .ptn(clotheDocument.getPattern())
+                    .colors(clotheDocument.getColors())
+                    .features(clotheDocument.getFeatures()).build();
+
+            return clotheResponse;
+        }
+    }
+
     /** DefaultUser 처리용 override, 차후 User 구별 시 삭제 예정 **/
 
-    public void addNewClothe(ClotheInfo clotheInfo) throws BaseException {
+    public void addNewClothe(ClotheRequest clotheInfo) throws BaseException {
         User defaultUser = userService.getDefaultUser();
         addNewClothe(defaultUser, clotheInfo);
     }
@@ -91,4 +115,10 @@ public class ClotheService {
         User defaultuser = userService.getDefaultUser();
         addCareInfos(defaultuser, careInfo);
     }
+
+    public ClotheResponse findRecentClothe() throws BaseException {
+        User defaultuser = userService.getDefaultUser();
+        return findRecentClothe(defaultuser);
+    }
+
 }
