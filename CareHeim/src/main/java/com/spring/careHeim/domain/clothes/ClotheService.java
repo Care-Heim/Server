@@ -15,6 +15,8 @@ import org.bson.types.ObjectId;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 import static com.spring.careHeim.config.BaseResponseStatus.*;
 
 @Slf4j
@@ -104,6 +106,35 @@ public class ClotheService {
         }
     }
 
+    public ClotheResponse findClothe(User user, ClotheRequest clotheRequest) throws BaseException {
+        User nowUser = userRepository.findById(user.getUserId()).orElseThrow(() -> new BaseException(BaseResponseStatus.USERS_DONT_EXIST));
+
+        List<ClotheDocument> clotheDocuments = clotheDocumentRepository.findClothes(nowUser.getUuid(), clotheRequest.getType(),
+                                                                            clotheRequest.getPtn(),
+                                                                            clotheRequest.getColors().toArray(new String[0]),
+                                                                            clotheRequest.getFeatures().toArray(new String[0]),
+                                                                            clotheRequest.getNickname());
+
+        if(clotheDocuments == null) {
+            throw new BaseException(CLOTHE_DONT_EXIST);
+        } else if(clotheDocuments.size() > 1) {
+            throw new BaseException(CLOTHE_DUPLICATE);
+        }
+
+        ClotheDocument clotheDocument = clotheDocuments.get(0);
+
+        ClotheResponse clotheResponse = ClotheResponse.builder()
+                .clotheId(String.valueOf(clotheDocument.getClotheId()))
+                .type(clotheDocument.getType())
+                .ptn(clotheDocument.getPattern())
+                .colors(clotheDocument.getColors())
+                .features(clotheDocument.getFeatures())
+                .nickname(clotheDocument.getNickname())
+                .build();
+
+        return clotheResponse;
+    }
+
     /** DefaultUser 처리용 override, 차후 User 구별 시 삭제 예정 **/
 
     public void addNewClothe(ClotheRequest clotheInfo) throws BaseException {
@@ -121,4 +152,8 @@ public class ClotheService {
         return findRecentClothe(defaultuser);
     }
 
+    public ClotheResponse findClothe(ClotheRequest clotheRequest) throws BaseException {
+        User defaultuser = userService.getDefaultUser();
+        return findClothe(defaultuser, clotheRequest);
+    }
 }

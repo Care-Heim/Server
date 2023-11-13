@@ -33,9 +33,27 @@ public interface ClotheDocumentRepository extends MongoRepository<ClotheDocument
     @Aggregation(
             pipeline = {
                     "{ $match: {'uuid': :#{#uuid}, status: 'ACTIVE'} }",
-                    "{ $sort: {'createdAt' :  -1 }}",
-                    "{ $limit:  1}"
+                    "{ $sort: {'createdAt' :  -1 } }",
+                    "{ $limit: 1 }"
             }
     )
-    ClotheDocument findRecentClothe(String uuid);
+    ClotheDocument findRecentClothe(@Param("uuid") String uuid);
+
+    @Aggregation(
+            pipeline = {
+                    "{ $match:  {'uuid': :#{#uuid}, status: 'ACTIVE', " +
+                            "'type': :#{#type}, " +
+                            "'pattern': :#{#ptn}, " +
+                            "'colors': :#{#colors}, " +
+                            "'features': :#{#features}, " +
+                            "'nickname': :#{#nickname} } }"
+            }
+    )
+    List<ClotheDocument> findClothes(@Param("uuid") String uuid,
+                              @Param("type") int type,
+                              @Param("ptn") int ptn,
+                              @Param("colors") String[] colors,
+                              @Param("features") String[] features,
+                              @Param("nickname") String nickname);
+
 }

@@ -49,7 +49,8 @@ public enum BaseResponseStatus {
     CLOTHE_ALREADY_EXIST(false, 2002, "동일한 의류 정보가 이미 존재합니다."),
     CLOTHE_DONT_EXIST(false, 2003, "존재하지 않는 의류입니다."),
     CAREINFO_ALREADY_ENROLL(false, 2004, "이미 세탁 정보가 등록된 의류입니다."),
-    RECENT_CLOTHE_DONT_EXIST(false, 2005, "최근에 등록한 의류가 존재하지 않습니다.")
+    RECENT_CLOTHE_DONT_EXIST(false, 2005, "최근에 등록한 의류가 존재하지 않습니다."),
+    CLOTHE_DUPLICATE(false, 2006, "중복된 의류가 존재합니다.")
     ;
 
 

@@ -1,5 +1,6 @@
 package com.spring.careHeim.domain.clothes.model;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 
 import java.util.List;
@@ -9,6 +10,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor(force = true)
 @Builder
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ClotheResponse {
     private String clotheId;
     private int type;

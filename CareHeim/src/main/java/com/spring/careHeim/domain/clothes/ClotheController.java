@@ -70,4 +70,23 @@ public class ClotheController {
         }
     }
 
+    /**
+     * 의류 정보 요청 API
+     *  [GET] /clothes?type=0&ptn=0&colors={색상}&features={특징}
+     */
+    @ResponseBody
+    @GetMapping(params = {"type", "ptn", "colors", "features"})
+    public BaseResponse<ClotheResponse> requestClotheInfos(@RequestParam("type") int type,
+                                                           @RequestParam("ptn") int ptn,
+                                                           @RequestParam("colors") List<String> colors,
+                                                           @RequestParam("features") List<String> features) {
+        try {
+            ClotheRequest clotheRequest = ClotheRequest.builder().type(type).ptn(ptn).colors(colors).features(features).build();
+            ClotheResponse clotheResponse = clotheService.findClothe(clotheRequest);
+
+            return new BaseResponse<ClotheResponse>(SUCCESS);
+        } catch (BaseException e) {
+            return new BaseResponse<>(e.getStatus());
+        }
+    }
 }

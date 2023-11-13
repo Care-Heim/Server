@@ -2,9 +2,6 @@ package com.spring.careHeim;
 
 import com.spring.careHeim.domain.clothes.ClotheDocumentRepository;
 import com.spring.careHeim.domain.clothes.document.ClotheDocument;
-import com.spring.careHeim.domain.clothes.model.ClotheInfo;
-import com.spring.careHeim.domain.users.UserRepository;
-import com.spring.careHeim.domain.users.entity.User;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
