@@ -8,7 +8,6 @@ build/
 ### Project Files ###
 *.properties
 *.yml
-*.
 /src/main/java/com/spring/careHeim/config/seceret/
 
 ### STS ###
