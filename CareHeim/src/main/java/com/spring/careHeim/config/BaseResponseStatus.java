@@ -51,7 +51,8 @@ public enum BaseResponseStatus {
     CAREINFO_ALREADY_ENROLL(false, 2004, "이미 세탁 정보가 등록된 의류입니다."),
     RECENT_CLOTHE_DONT_EXIST(false, 2005, "최근에 등록한 의류가 존재하지 않습니다."),
     CLOTHE_DUPLICATE(false, 2006, "중복된 의류가 존재합니다."),
-    POST_FAIL_S3(false, 2007, "이미지 저장에 실패했습니다." )
+    POST_FAIL_S3(false, 2007, "이미지 저장에 실패했습니다."),
+    FAIL_CLOTHE_SEG(false, 2008, "의류 분류에 실패했습니다.")
     ;
 
 
