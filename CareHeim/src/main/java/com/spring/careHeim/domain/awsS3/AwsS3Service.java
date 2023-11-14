@@ -4,6 +4,7 @@ import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
+import com.amazonaws.services.s3.model.S3Object;
 import com.spring.careHeim.config.BaseException;
 import com.spring.careHeim.domain.awsS3.model.FileInfo;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.UUID;
 
+import static com.spring.careHeim.config.BaseResponseStatus.LOAD_OBJECT_FAIL;
 import static com.spring.careHeim.config.BaseResponseStatus.POST_FAIL_S3;
 
 @Slf4j
@@ -31,13 +33,15 @@ public class AwsS3Service {
     private String bucket;
     @Autowired
     private final AmazonS3 amazonS3;
-    @Value("${cloud.aws.s3.dir}")
-    private String dir;
+    @Value("${cloud.aws.s3.dir1}")
+    private String dir_images;
+    @Value("${cloud.aws.s3.dir2}")
+    private String dir_seg_result;
 
     public FileInfo uploadImage(MultipartFile image) throws BaseException {
         try {
             String fileName = createFileName(image.getOriginalFilename());
-            String filePath = dir.concat(fileName).concat(getFileExtension(image.getOriginalFilename()));
+            String filePath = dir_images.concat(fileName).concat(getFileExtension(image.getOriginalFilename()));
             String fileUrl = amazonS3.getUrl(bucket, filePath).toString();
 
             ObjectMetadata objectMetadata = new ObjectMetadata();
@@ -58,6 +62,28 @@ public class AwsS3Service {
             System.out.println(e);
             throw new BaseException(POST_FAIL_S3);
         }
+    }
+
+    public S3Object getObjectFromS3(String fileUrl) throws BaseException {
+        String fileExtension = getFileExtension(fileUrl);
+        String fileName = fileUrl.substring(fileUrl.lastIndexOf("/") + 1, fileUrl.lastIndexOf("."));
+        System.out.println(fileName);
+
+        S3Object s3Object = null;
+
+        if(fileUrl.contains("/images")){
+            String key = dir_images.concat(fileName).concat(fileExtension);
+            s3Object = amazonS3.getObject(bucket, key);
+        } else {
+            String key = dir_seg_result.concat(fileName).concat(fileExtension);
+            s3Object = amazonS3.getObject(bucket, key);
+        }
+
+        if(s3Object == null) {
+            throw new BaseException(LOAD_OBJECT_FAIL);
+        }
+
+        return s3Object;
     }
 
     private String createFileName(String fileName) {
