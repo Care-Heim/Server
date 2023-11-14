@@ -2,7 +2,8 @@ package com.spring.careHeim.domain.awsS3;
 
 import com.spring.careHeim.config.BaseException;
 import com.spring.careHeim.config.BaseResponse;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.spring.careHeim.config.BaseResponseStatus;
+import com.spring.careHeim.domain.awsS3.model.S3Object;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -18,7 +19,7 @@ public class AwsS3Controller {
     @ResponseBody
     @PostMapping("/image")
     public BaseResponse<String> uploadImage(@RequestParam(name = "image") MultipartFile image) throws BaseException {
-        String fileUrl = awsS3Service.uploadImage(image);
-        return new BaseResponse<>(fileUrl);
+        S3Object s3Object = awsS3Service.uploadImage(image);
+        return new BaseResponse<>(BaseResponseStatus.SUCCESS);
     }
 }
