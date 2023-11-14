@@ -36,16 +36,16 @@ public class AwsS3Service {
 
     public S3Object uploadImage(MultipartFile image) throws BaseException {
         try {
-            String fileName = dir + createFileName(image.getOriginalFilename());
-
-            String fileUrl = amazonS3.getUrl(bucket, fileName).toString();
+            String fileName = createFileName(image.getOriginalFilename());
+            String filePath = dir.concat(fileName).concat(getFileExtension(image.getOriginalFilename()));
+            String fileUrl = amazonS3.getUrl(bucket, filePath).toString();
 
             ObjectMetadata objectMetadata = new ObjectMetadata();
             objectMetadata.setContentLength(image.getSize());
             objectMetadata.setContentType(image.getContentType());
 
             try (InputStream inputStream = image.getInputStream()) {
-                amazonS3.putObject(new PutObjectRequest(bucket, fileName, inputStream, objectMetadata)
+                amazonS3.putObject(new PutObjectRequest(bucket, filePath, inputStream, objectMetadata)
                         .withCannedAcl(CannedAccessControlList.PublicRead));
             } catch (IOException e) {
                 throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "이미지 업로드에 실패했습니다.");
@@ -61,7 +61,7 @@ public class AwsS3Service {
     }
 
     private String createFileName(String fileName) {
-        return UUID.randomUUID().toString().concat(getFileExtension(fileName));
+        return UUID.randomUUID().toString();
     }
 
     private String getFileExtension(String fileName) {
