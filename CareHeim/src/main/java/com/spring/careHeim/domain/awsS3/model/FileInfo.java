@@ -8,7 +8,7 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor(force = true)
 @Builder
-public class S3Object {
+public class FileInfo {
     String fileName;
     String fileUrl;
 }

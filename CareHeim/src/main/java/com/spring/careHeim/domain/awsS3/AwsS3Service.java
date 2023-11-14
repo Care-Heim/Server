@@ -5,7 +5,7 @@ import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.ObjectMetadata;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.spring.careHeim.config.BaseException;
-import com.spring.careHeim.domain.awsS3.model.S3Object;
+import com.spring.careHeim.domain.awsS3.model.FileInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,7 +34,7 @@ public class AwsS3Service {
     @Value("${cloud.aws.s3.dir}")
     private String dir;
 
-    public S3Object uploadImage(MultipartFile image) throws BaseException {
+    public FileInfo uploadImage(MultipartFile image) throws BaseException {
         try {
             String fileName = createFileName(image.getOriginalFilename());
             String filePath = dir.concat(fileName).concat(getFileExtension(image.getOriginalFilename()));
@@ -51,9 +51,9 @@ public class AwsS3Service {
                 throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "이미지 업로드에 실패했습니다.");
             }
 
-            S3Object s3Object = new S3Object(fileName, fileUrl);
+            FileInfo fileInfo = new FileInfo(fileName, fileUrl);
 
-            return s3Object;
+            return fileInfo;
         } catch (Exception e){
             System.out.println(e);
             throw new BaseException(POST_FAIL_S3);

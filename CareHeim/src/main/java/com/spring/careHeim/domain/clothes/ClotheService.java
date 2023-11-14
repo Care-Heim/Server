@@ -2,13 +2,9 @@ package com.spring.careHeim.domain.clothes;
 
 import com.spring.careHeim.config.BaseException;
 import com.spring.careHeim.config.BaseResponseStatus;
-import com.spring.careHeim.domain.awsS3.AwsS3Service;
-import com.spring.careHeim.domain.awsS3.model.S3Object;
+import com.spring.careHeim.domain.awsS3.model.FileInfo;
 import com.spring.careHeim.domain.clothes.document.ClotheDocument;
-import com.spring.careHeim.domain.clothes.model.CareInfo;
-import com.spring.careHeim.domain.clothes.model.ClotheRequest;
-import com.spring.careHeim.domain.clothes.model.ClotheResponse;
-import com.spring.careHeim.domain.clothes.model.SegmentResult;
+import com.spring.careHeim.domain.clothes.model.*;
 import com.spring.careHeim.domain.users.UserRepository;
 import com.spring.careHeim.domain.users.UserService;
 import com.spring.careHeim.domain.users.entity.User;
@@ -24,7 +20,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Collections;
 import java.util.List;
@@ -39,6 +34,7 @@ public class ClotheService {
     private final UserService userService;
     private final UserRepository userRepository;
     private final ClotheDocumentRepository clotheDocumentRepository;
+
     public boolean hasSameClothe(User user, ClotheRequest clotheInfo) throws BaseException{
         Integer cnt = 0;
         if(clotheInfo.getFeatures() == null) {
@@ -149,7 +145,7 @@ public class ClotheService {
     }
 
     // Clothe Segmentation 요청
-    public SegmentResult requestSegClothe(S3Object s3Object) throws BaseException {
+    public SegmentResult requestSegClothe(FileInfo fileInfo) throws BaseException {
         // 요청을 보낼 uri 작성
         String uri = "http://localhost:10002/clothes";
 
@@ -163,8 +159,8 @@ public class ClotheService {
 
         // RequestBody 설정
         JSONObject requestBody = new JSONObject();
-        requestBody.put("fileUrl", s3Object.getFileUrl());
-        requestBody.put("fileName", s3Object.getFileName());
+        requestBody.put("fileUrl", fileInfo.getFileUrl());
+        requestBody.put("fileName", fileInfo.getFileName());
 
         // HttpEntity 설정
         HttpEntity entity = new HttpEntity<>(requestBody.toString(), headers);
@@ -182,7 +178,7 @@ public class ClotheService {
         String fileUrl = body.get("fileUrl").toString();
 
         // file명, imageUrl, jsonUrl return
-        SegmentResult result = new SegmentResult(s3Object.getFileName(), s3Object.getFileUrl(), fileUrl);
+        SegmentResult result = new SegmentResult(fileInfo.getFileName(), fileInfo.getFileUrl(), fileUrl);
 
         return result;
     }
