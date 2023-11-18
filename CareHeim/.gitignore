@@ -8,8 +8,7 @@ build/
 ### Project Files ###
 *.properties
 *.yml
-*.
-/care-heim/src/main/java/com/spring/careHeim/config/seceret/
+/src/main/java/com/spring/careHeim/config/seceret/
 
 ### STS ###
 .apt_generated

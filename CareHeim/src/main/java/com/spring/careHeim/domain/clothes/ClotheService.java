@@ -2,20 +2,28 @@ package com.spring.careHeim.domain.clothes;
 
 import com.spring.careHeim.config.BaseException;
 import com.spring.careHeim.config.BaseResponseStatus;
+import com.spring.careHeim.domain.awsS3.model.FileInfo;
 import com.spring.careHeim.domain.clothes.document.ClotheDocument;
-import com.spring.careHeim.domain.clothes.model.CareInfo;
-import com.spring.careHeim.domain.clothes.model.ClotheRequest;
-import com.spring.careHeim.domain.clothes.model.ClotheResponse;
+import com.spring.careHeim.domain.clothes.model.*;
 import com.spring.careHeim.domain.users.UserRepository;
 import com.spring.careHeim.domain.users.UserService;
 import com.spring.careHeim.domain.users.entity.User;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
 import org.bson.types.ObjectId;
+import org.json.simple.JSONObject;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import static com.spring.careHeim.config.BaseResponseStatus.*;
 
@@ -26,6 +34,7 @@ public class ClotheService {
     private final UserService userService;
     private final UserRepository userRepository;
     private final ClotheDocumentRepository clotheDocumentRepository;
+
     public boolean hasSameClothe(User user, ClotheRequest clotheInfo) throws BaseException{
         Integer cnt = 0;
         if(clotheInfo.getFeatures() == null) {
@@ -133,6 +142,45 @@ public class ClotheService {
                 .build();
 
         return clotheResponse;
+    }
+
+    // Clothe Segmentation 요청
+    public SegmentResult requestSegClothe(FileInfo fileInfo) throws BaseException {
+        // 요청을 보낼 uri 작성
+        String uri = "http://localhost:10002/clothes";
+
+        // 응답을 주고 받을 template 생성
+        RestTemplate restTemplate = new RestTemplate();
+
+        // Header 설정
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+
+        // RequestBody 설정
+        JSONObject requestBody = new JSONObject();
+        requestBody.put("fileUrl", fileInfo.getFileUrl());
+        requestBody.put("fileName", fileInfo.getFileName());
+
+        // HttpEntity 설정
+        HttpEntity entity = new HttpEntity<>(requestBody.toString(), headers);
+
+        // 요청
+        ResponseEntity<Map> response = restTemplate.postForEntity(uri, entity, Map.class);
+
+        // ResponseBody parsing
+        if(!response.hasBody()) {
+            throw new BaseException(FAIL_CLOTHE_SEG);
+        }
+
+        Map body = response.getBody();
+
+        String fileUrl = body.get("fileUrl").toString();
+
+        // file명, imageUrl, jsonUrl return
+        SegmentResult result = new SegmentResult(fileInfo.getFileName(), fileInfo.getFileUrl(), fileUrl);
+
+        return result;
     }
 
     /** DefaultUser 처리용 override, 차후 User 구별 시 삭제 예정 **/
