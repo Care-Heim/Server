@@ -26,12 +26,19 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-validation'
     implementation 'org.springframework.boot:spring-boot-starter-data-jdbc'
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
     // for mongoDB
     implementation 'org.springframework.boot:spring-boot-starter-data-mongodb'
     // for s3
     implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.1.RELEASE'
     // for json
     implementation 'com.googlecode.json-simple:json-simple:1.1.1'
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.15.2'
+    // for openCV
+    implementation 'org.openpnp:opencv:4.7.0-0'
+    // A Protocol for Asynchronous Non-Blocking Data Sequence
+    implementation 'org.reactivestreams:reactive-streams:1.0.3'
+
     compileOnly 'org.projectlombok:lombok'
     runtimeOnly 'com.mysql:mysql-connector-j'
     developmentOnly 'org.springframework.boot:spring-boot-devtools'

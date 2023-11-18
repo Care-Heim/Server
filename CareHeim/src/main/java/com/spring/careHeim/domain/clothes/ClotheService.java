@@ -1,8 +1,10 @@
 package com.spring.careHeim.domain.clothes;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.spring.careHeim.config.BaseException;
 import com.spring.careHeim.config.BaseResponseStatus;
-import com.spring.careHeim.domain.awsS3.model.FileInfo;
 import com.spring.careHeim.domain.clothes.document.ClotheDocument;
 import com.spring.careHeim.domain.clothes.model.*;
 import com.spring.careHeim.domain.users.UserRepository;
@@ -13,17 +15,20 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.bson.types.ObjectId;
 import org.json.simple.JSONObject;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.io.IOException;
+import java.util.*;
 
 import static com.spring.careHeim.config.BaseResponseStatus.*;
 
@@ -34,6 +39,7 @@ public class ClotheService {
     private final UserService userService;
     private final UserRepository userRepository;
     private final ClotheDocumentRepository clotheDocumentRepository;
+    private final ObjectMapper objectMapper;
 
     public boolean hasSameClothe(User user, ClotheRequest clotheInfo) throws BaseException{
         Integer cnt = 0;
@@ -145,7 +151,7 @@ public class ClotheService {
     }
 
     // Clothe Segmentation 요청
-    public SegmentResult requestSegClothe(FileInfo fileInfo) throws BaseException {
+    public String requestSegClothe(MultipartFile image) throws BaseException, IOException {
         // 요청을 보낼 uri 작성
         String uri = "http://localhost:10002/clothes";
 
@@ -154,33 +160,45 @@ public class ClotheService {
 
         // Header 설정
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
         headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
 
-        // RequestBody 설정
-        JSONObject requestBody = new JSONObject();
-        requestBody.put("fileUrl", fileInfo.getFileUrl());
-        requestBody.put("fileName", fileInfo.getFileName());
+        // Part 세팅
+        MultiValueMap<String, Object> multipartBody = new LinkedMultiValueMap<>();
+
+        // Multipartfile을 그대로 사용하지 않고 byte로 변환하여 사용
+        multipartBody.add("image", new ByteArrayResource(image.getBytes()) {
+            @Override
+            public String getFilename() {
+                return image.getOriginalFilename(); // 이미지 파일명 설정
+            }
+        });
 
         // HttpEntity 설정
-        HttpEntity entity = new HttpEntity<>(requestBody.toString(), headers);
+        HttpEntity<MultiValueMap<String, Object>> entity = new HttpEntity<>(multipartBody, headers);
 
-        // 요청
-        ResponseEntity<Map> response = restTemplate.postForEntity(uri, entity, Map.class);
+        try {
+            // 요청
+            ResponseEntity<String> response = restTemplate.postForEntity(uri, entity, String.class);
 
-        // ResponseBody parsing
-        if(!response.hasBody()) {
-            throw new BaseException(FAIL_CLOTHE_SEG);
+            if (!response.hasBody()) {
+                throw new BaseException(FAIL_CLOTHE_SEG);
+            }
+
+            return response.getBody();
+        } catch (Exception e) {
+            throw new BaseException(SERVER_ERROR);
         }
+    }
 
-        Map body = response.getBody();
-
-        String fileUrl = body.get("fileUrl").toString();
-
-        // file명, imageUrl, jsonUrl return
-        SegmentResult result = new SegmentResult(fileInfo.getFileName(), fileInfo.getFileUrl(), fileUrl);
-
-        return result;
+    public List<SegClothe> parsingSegmentResult(String segmentResult) throws BaseException {
+        try {
+            List<SegClothe> segClothes = null;
+            segClothes = objectMapper.readValue(segmentResult, new TypeReference<List<SegClothe>>() {});
+            return segClothes;
+        } catch (JsonProcessingException e) {
+            throw new BaseException(PARSING_ERROR);
+        }
     }
 
     /** DefaultUser 처리용 override, 차후 User 구별 시 삭제 예정 **/

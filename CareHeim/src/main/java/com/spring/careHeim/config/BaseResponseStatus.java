@@ -53,7 +53,8 @@ public enum BaseResponseStatus {
     CLOTHE_DUPLICATE(false, 2006, "중복된 의류가 존재합니다."),
     POST_FAIL_S3(false, 2007, "이미지 저장에 실패했습니다."),
     FAIL_CLOTHE_SEG(false, 2008, "의류 분류에 실패했습니다."),
-    LOAD_OBJECT_FAIL(false, 2009, "파일 로드에 실패했습니다.")
+    LOAD_OBJECT_FAIL(false, 2009, "파일 로드에 실패했습니다."),
+    PARSING_ERROR(false, 2010, "파싱 실패")
     ;
 
 
