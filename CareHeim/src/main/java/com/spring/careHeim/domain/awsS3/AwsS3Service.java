@@ -40,7 +40,7 @@ public class AwsS3Service {
 
     public FileInfo uploadImage(MultipartFile image) throws BaseException {
         try {
-            String fileName = createFileName(image.getOriginalFilename());
+            String fileName = createFileName();
             String filePath = dir_images.concat(fileName).concat(getFileExtension(image.getOriginalFilename()));
             String fileUrl = amazonS3.getUrl(bucket, filePath).toString();
 
@@ -86,7 +86,7 @@ public class AwsS3Service {
         return s3Object;
     }
 
-    private String createFileName(String fileName) {
+    private String createFileName() {
         return UUID.randomUUID().toString();
     }
 
