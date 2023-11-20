@@ -98,4 +98,33 @@ public class ImageService {
         }
     }
 
+    public List<ColorBloc> clustringColor(List<Color> colors) {
+        List<ColorBloc> blocs = new ArrayList<>();
+
+        for(Color color : colors) {
+            if(blocs.isEmpty()) {
+                ColorBloc newBloc = new ColorBloc(color);
+                blocs.add(newBloc);
+            } else {
+                boolean flag = true;
+                for(ColorBloc bloc : blocs) {
+                    if(bloc.isSameColor(color.getH(), color.getS(), color.getV())) {
+                        bloc.add(color.getH(), color.getS(), color.getV(),color.getPixelFraction());
+                        flag = false;
+                        break;
+                    }
+                }
+
+                if(flag) {
+                    blocs.add(new ColorBloc(color));
+                }
+            }
+        }
+
+        for(ColorBloc bloc : blocs) {
+            bloc.decideColorName();
+        }
+
+        return blocs;
+    }
 }
