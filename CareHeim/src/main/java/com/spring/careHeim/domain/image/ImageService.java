@@ -127,4 +127,31 @@ public class ImageService {
 
         return blocs;
     }
+
+    public List<String> getMainColors(byte[] img) throws BaseException {
+        try {
+            List<Color> colors = detectColors(img);
+            List<ColorBloc> colorBlocs = clustringColor(colors);
+
+            double entPixelFraction = 0;
+
+            for(ColorBloc bloc : colorBlocs) {
+                entPixelFraction += bloc.getPixelFraction();
+            }
+
+            ArrayList<String> mainColors = new ArrayList<>();
+
+            for(ColorBloc bloc : colorBlocs) {
+                if(bloc.getPixelFraction() / entPixelFraction < 0.2) {
+                    continue;
+                }
+
+                String name = bloc.getName();
+                mainColors.add(name);
+            }
+            return mainColors;
+        } catch (IOException e) {
+            throw new BaseException(FAILED_TO_COLOR);
+        }
+    }
 }
