@@ -1,6 +1,10 @@
 package com.spring.careHeim.domain.image;
 
+import com.google.cloud.vision.v1.*;
+import com.google.protobuf.ByteString;
 import com.spring.careHeim.config.BaseException;
+import com.spring.careHeim.domain.image.model.Color;
+import com.spring.careHeim.domain.image.model.ColorBloc;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.opencv.core.*;
@@ -8,8 +12,11 @@ import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.spring.careHeim.config.BaseResponseStatus.FAILED_TO_COLOR;
 
 @Slf4j
 @Service
@@ -49,4 +56,46 @@ public class ImageService {
 
         return resultMatOfByte.toArray();
     }
+
+    public List<Color> detectColors(byte[] byte_img) throws IOException {
+        List<AnnotateImageRequest> requests = new ArrayList<>();
+
+        ByteString imgBytes = ByteString.copyFrom(byte_img);
+
+        Image img = Image.newBuilder().setContent(imgBytes).build();
+        Feature feat = Feature.newBuilder().setType(Feature.Type.IMAGE_PROPERTIES).setMaxResults(3).build();
+        AnnotateImageRequest request = AnnotateImageRequest.newBuilder().addFeatures(feat).setImage(img).build();
+        requests.add(request);
+
+        // Initialize client that will be used to send requests. This client only needs to be created
+        // once, and can be reused for multiple requests. After completing all of your requests, call
+        // the "close" method on the client to safely clean up any remaining background resources.
+        try (ImageAnnotatorClient client = ImageAnnotatorClient.create()) {
+            BatchAnnotateImagesResponse response = client.batchAnnotateImages(requests);
+            List<AnnotateImageResponse> responses = response.getResponsesList();
+
+            List colors = new ArrayList<Color>();
+
+            for (AnnotateImageResponse res : responses) {
+                if (res.hasError()) {
+                    System.out.format("Error: %s%n", res.getError().getMessage());
+                    return null;
+                }
+
+                // For full list of available annotations, see http://g.co/cloud/vision/docs
+                DominantColorsAnnotation colorsInfo = res.getImagePropertiesAnnotation().getDominantColors();
+
+                for (ColorInfo color : colorsInfo.getColorsList()) {
+                    int[] RGB = {(int) color.getColor().getRed(), (int) color.getColor().getGreen(), (int) color.getColor().getBlue()};
+
+                    Color temp = new Color(RGB);
+                    temp.setPixelFraction(color.getPixelFraction());
+
+                    colors.add(temp);
+                }
+            }
+            return colors;
+        }
+    }
+
 }

@@ -38,6 +38,10 @@ dependencies {
     implementation 'org.openpnp:opencv:4.7.0-0'
     // A Protocol for Asynchronous Non-Blocking Data Sequence
     implementation 'org.reactivestreams:reactive-streams:1.0.3'
+    // for cloud vision
+    implementation 'org.springframework.cloud:spring-cloud-gcp-starter-vision:1.2.8.RELEASE'
+    implementation platform('com.google.cloud:libraries-bom:26.26.0')
+    implementation 'com.google.cloud:google-cloud-bigquery'
 
     compileOnly 'org.projectlombok:lombok'
     runtimeOnly 'com.mysql:mysql-connector-j'
