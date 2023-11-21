@@ -1,6 +1,10 @@
 package com.spring.careHeim.domain.image;
 
+import com.google.cloud.vision.v1.*;
+import com.google.protobuf.ByteString;
 import com.spring.careHeim.config.BaseException;
+import com.spring.careHeim.domain.image.model.Color;
+import com.spring.careHeim.domain.image.model.ColorBloc;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.opencv.core.*;
@@ -8,8 +12,11 @@ import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.spring.careHeim.config.BaseResponseStatus.FAILED_TO_COLOR;
 
 @Slf4j
 @Service
@@ -48,5 +55,103 @@ public class ImageService {
         Imgcodecs.imencode(".png", resultMat, resultMatOfByte);
 
         return resultMatOfByte.toArray();
+    }
+
+    public List<Color> detectColors(byte[] byte_img) throws IOException {
+        List<AnnotateImageRequest> requests = new ArrayList<>();
+
+        ByteString imgBytes = ByteString.copyFrom(byte_img);
+
+        Image img = Image.newBuilder().setContent(imgBytes).build();
+        Feature feat = Feature.newBuilder().setType(Feature.Type.IMAGE_PROPERTIES).setMaxResults(3).build();
+        AnnotateImageRequest request = AnnotateImageRequest.newBuilder().addFeatures(feat).setImage(img).build();
+        requests.add(request);
+
+        // Initialize client that will be used to send requests. This client only needs to be created
+        // once, and can be reused for multiple requests. After completing all of your requests, call
+        // the "close" method on the client to safely clean up any remaining background resources.
+        try (ImageAnnotatorClient client = ImageAnnotatorClient.create()) {
+            BatchAnnotateImagesResponse response = client.batchAnnotateImages(requests);
+            List<AnnotateImageResponse> responses = response.getResponsesList();
+
+            List colors = new ArrayList<Color>();
+
+            for (AnnotateImageResponse res : responses) {
+                if (res.hasError()) {
+                    System.out.format("Error: %s%n", res.getError().getMessage());
+                    return null;
+                }
+
+                // For full list of available annotations, see http://g.co/cloud/vision/docs
+                DominantColorsAnnotation colorsInfo = res.getImagePropertiesAnnotation().getDominantColors();
+
+                for (ColorInfo color : colorsInfo.getColorsList()) {
+                    int[] RGB = {(int) color.getColor().getRed(), (int) color.getColor().getGreen(), (int) color.getColor().getBlue()};
+
+                    Color temp = new Color(RGB);
+                    temp.setPixelFraction(color.getPixelFraction());
+
+                    colors.add(temp);
+                }
+            }
+            return colors;
+        }
+    }
+
+    public List<ColorBloc> clustringColor(List<Color> colors) {
+        List<ColorBloc> blocs = new ArrayList<>();
+
+        for(Color color : colors) {
+            if(blocs.isEmpty()) {
+                ColorBloc newBloc = new ColorBloc(color);
+                blocs.add(newBloc);
+            } else {
+                boolean flag = true;
+                for(ColorBloc bloc : blocs) {
+                    if(bloc.isSameColor(color.getH(), color.getS(), color.getV())) {
+                        bloc.add(color.getH(), color.getS(), color.getV(),color.getPixelFraction());
+                        flag = false;
+                        break;
+                    }
+                }
+
+                if(flag) {
+                    blocs.add(new ColorBloc(color));
+                }
+            }
+        }
+
+        for(ColorBloc bloc : blocs) {
+            bloc.decideColorName();
+        }
+
+        return blocs;
+    }
+
+    public List<String> getMainColors(byte[] img) throws BaseException {
+        try {
+            List<Color> colors = detectColors(img);
+            List<ColorBloc> colorBlocs = clustringColor(colors);
+
+            double entPixelFraction = 0;
+
+            for(ColorBloc bloc : colorBlocs) {
+                entPixelFraction += bloc.getPixelFraction();
+            }
+
+            ArrayList<String> mainColors = new ArrayList<>();
+
+            for(ColorBloc bloc : colorBlocs) {
+                if(bloc.getPixelFraction() / entPixelFraction < 0.2) {
+                    continue;
+                }
+
+                String name = bloc.getName();
+                mainColors.add(name);
+            }
+            return mainColors;
+        } catch (IOException e) {
+            throw new BaseException(FAILED_TO_COLOR);
+        }
     }
 }
