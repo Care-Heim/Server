@@ -253,6 +253,26 @@ public class ClotheService {
         }
     }
 
+    public List<ClotheInfo> getFeatures(MultipartFile image) throws BaseException, IOException {
+        List<ClotheInfo> clothes = new ArrayList<>();
+
+        // segment result 가져오기
+        List<SegClothe> segFiles = parsingSegmentResult(requestSegClothe(image));
+        for (SegClothe segFile : segFiles) {
+            byte[] segmentedImg = imageService.separateObject(image.getBytes(), segFile.getCoordinates());
+            List<String> colors = imageService.getMainColors(segmentedImg);
+            Pattern ptn = getPattern(segmentedImg);
+            ClotheInfo clotheInfo = ClotheInfo.builder()
+                    .type(segFile.getType().getNumber())
+                    .ptn(ptn.getNumber())
+                    .colors(colors)
+                    .build();
+
+            clothes.add(clotheInfo);
+        }
+        return clothes;
+    }
+
     /** DefaultUser 처리용 override, 차후 User 구별 시 삭제 예정 **/
 
     public void addNewClothe(ClotheRequest clotheInfo) throws BaseException {
