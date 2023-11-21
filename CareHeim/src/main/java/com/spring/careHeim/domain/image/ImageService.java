@@ -34,7 +34,7 @@ public class ImageService {
         Mat img = Imgcodecs.imdecode(matOfByte, Imgcodecs.IMREAD_COLOR);
 
         // 마스크 생성
-        Mat mask = new Mat(img.size(), CvType.CV_8UC1, Scalar.all(0));
+        Mat mask = new Mat(img.size(), CvType.CV_8UC3, new Scalar(0, 255, 0));
         MatOfPoint polygon = new MatOfPoint();
         polygon.fromList(points);
 
@@ -43,16 +43,20 @@ public class ImageService {
 
         Imgproc.fillPoly(mask, list, Scalar.all(255));
 
-        // mask 합성
-        List<Mat> channels = new ArrayList<>();
-        Core.split(img, channels);
-        channels.add(mask);
-        Mat resultMat = new Mat();
-        Core.merge(channels, resultMat);
+        Mat resultMat = img.clone();
 
-        // 합성 결과 저장 - format : png
+        for (int i = 0; i < img.rows(); i++) {
+            for (int j = 0; j < img.cols(); j++) {
+                double[] pixel = mask.get(i, j);
+                if (pixel[0] == 0 && pixel[1] == 255 && pixel[2] == 0) {  // 형광 부분 (마스크 값이 0인 부분)
+                    resultMat.put(i, j, new double[]{0, 255, 0});  // 형광으로 설정
+                }
+            }
+        }
+
+        // 합성 결과 저장 - format : jpg
         MatOfByte resultMatOfByte = new MatOfByte();
-        Imgcodecs.imencode(".png", resultMat, resultMatOfByte);
+        Imgcodecs.imencode(".jpg", resultMat, resultMatOfByte);
 
         return resultMatOfByte.toArray();
     }
@@ -87,6 +91,10 @@ public class ImageService {
 
                 for (ColorInfo color : colorsInfo.getColorsList()) {
                     int[] RGB = {(int) color.getColor().getRed(), (int) color.getColor().getGreen(), (int) color.getColor().getBlue()};
+
+                    if(RGB[1] >= 240 && RGB[0] < 10 && RGB[2] < 10) {
+                         continue;
+                    }
 
                     Color temp = new Color(RGB);
                     temp.setPixelFraction(color.getPixelFraction());
@@ -149,8 +157,10 @@ public class ImageService {
                 String name = bloc.getName();
                 mainColors.add(name);
             }
+            System.out.println("색상 okay");
             return mainColors;
         } catch (IOException e) {
+            e.printStackTrace();
             throw new BaseException(FAILED_TO_COLOR);
         }
     }
