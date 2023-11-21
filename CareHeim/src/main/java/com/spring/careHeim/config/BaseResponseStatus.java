@@ -56,7 +56,8 @@ public enum BaseResponseStatus {
     LOAD_OBJECT_FAIL(false, 2009, "파일 로드에 실패했습니다."),
     PARSING_ERROR(false, 2010, "파싱 실패"),
     FAILED_TO_COLOR(false, 2011, "색상 추출에 실패했습니다."),
-    FAILED_GET_PATTERN(false, 2012, "패턴 추출에 실패했습니다.")
+    FAILED_GET_PATTERN(false, 2012, "패턴 추출에 실패했습니다."),
+    FAILED_GET_STAIN_INFO(false, 2013, "오염 추출에 실패했습니다.")
     ;
 
 
