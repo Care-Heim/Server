@@ -15,7 +15,8 @@ public enum Pattern {
     LETTERING(6),
     PLAIN(7),
     POLKA_DOTS(8),
-    STRIPES(9);
+    STRIPES(9),
+    NULL(10);
 
     private final int number;
 
