@@ -55,7 +55,8 @@ public enum BaseResponseStatus {
     FAIL_CLOTHE_SEG(false, 2008, "의류 분류에 실패했습니다."),
     LOAD_OBJECT_FAIL(false, 2009, "파일 로드에 실패했습니다."),
     PARSING_ERROR(false, 2010, "파싱 실패"),
-    FAILED_TO_COLOR(false, 2011, "색상 추출에 실패했습니다.")
+    FAILED_TO_COLOR(false, 2011, "색상 추출에 실패했습니다."),
+    FAILED_GET_PATTERN(false, 2012, "패턴 추출에 실패했습니다.")
     ;
 
 
