@@ -60,9 +60,7 @@ public class ColorBloc {
             name += "회색";
         } else {
             if(this.avgV > 60) {
-                if(this.avgS < 25) {
-                    name = "매우 옅은 ";
-                } else if(this.avgS < 60){
+                if(this.avgS < 60){
                     name = "연한 ";
                 }
             } else {

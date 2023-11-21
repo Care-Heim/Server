@@ -3,16 +3,18 @@ package com.spring.careHeim.domain.clothes;
 import com.spring.careHeim.config.BaseException;
 import com.spring.careHeim.config.BaseResponse;
 import com.spring.careHeim.domain.clothes.model.CareInfo;
+import com.spring.careHeim.domain.clothes.model.ClotheInfo;
 import com.spring.careHeim.domain.clothes.model.ClotheRequest;
 import com.spring.careHeim.domain.clothes.model.ClotheResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.util.List;
 
-import static com.spring.careHeim.config.BaseResponseStatus.CREATED;
-import static com.spring.careHeim.config.BaseResponseStatus.SUCCESS;
+import static com.spring.careHeim.config.BaseResponseStatus.*;
 
 @Slf4j
 @RestController
@@ -87,6 +89,20 @@ public class ClotheController {
             return new BaseResponse<ClotheResponse>(SUCCESS);
         } catch (BaseException e) {
             return new BaseResponse<>(e.getStatus());
+        }
+    }
+
+    @ResponseBody
+    @PostMapping("/extract")
+    public BaseResponse<List<ClotheInfo>> extractFeatue(@RequestParam(name = "image") MultipartFile image) {
+        try {
+            List<ClotheInfo> clotheInfos = clotheService.getFeatures(image);
+
+            return new BaseResponse<>(clotheInfos);
+        } catch (BaseException e) {
+            return new BaseResponse<>(e.getStatus());
+        } catch (IOException e) {
+            return new BaseResponse<>(FAILED_TO_LOGIN);
         }
     }
 }

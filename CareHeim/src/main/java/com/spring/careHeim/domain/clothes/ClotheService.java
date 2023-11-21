@@ -1,5 +1,6 @@
 package com.spring.careHeim.domain.clothes;
 
+import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -7,6 +8,7 @@ import com.spring.careHeim.config.BaseException;
 import com.spring.careHeim.config.BaseResponseStatus;
 import com.spring.careHeim.domain.clothes.document.ClotheDocument;
 import com.spring.careHeim.domain.clothes.model.*;
+import com.spring.careHeim.domain.image.ImageService;
 import com.spring.careHeim.domain.users.UserRepository;
 import com.spring.careHeim.domain.users.UserService;
 import com.spring.careHeim.domain.users.entity.User;
@@ -15,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.bson.types.ObjectId;
 import org.json.simple.JSONObject;
+import org.json.simple.parser.JSONParser;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -36,10 +39,13 @@ import static com.spring.careHeim.config.BaseResponseStatus.*;
 @Service
 @RequiredArgsConstructor
 public class ClotheService {
+    private final ImageService imageService;
     private final UserService userService;
     private final UserRepository userRepository;
     private final ClotheDocumentRepository clotheDocumentRepository;
     private final ObjectMapper objectMapper;
+    private final JSONParser jsonParser = new JSONParser();
+
 
     public boolean hasSameClothe(User user, ClotheRequest clotheInfo) throws BaseException{
         Integer cnt = 0;
@@ -199,6 +205,72 @@ public class ClotheService {
         } catch (JsonProcessingException e) {
             throw new BaseException(PARSING_ERROR);
         }
+    }
+
+    public Pattern getPattern(byte[] image) throws BaseException {
+        // 요청을 보낼 uri 작성
+        String uri = "http://localhost:10002/patterns";
+
+        // 응답을 주고 받을 template 생성
+        RestTemplate restTemplate = new RestTemplate();
+
+        // Header 설정
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+
+        // Part 세팅
+        MultiValueMap<String, Object> multipartBody = new LinkedMultiValueMap<>();
+
+        // image 세팅
+        multipartBody.add("image", new ByteArrayResource(image) {
+            @Override
+            public String getFilename() {
+                return UUID.randomUUID().toString(); // 이미지 파일명 설정
+            }
+        });
+
+        // HttpEntity 설정
+        HttpEntity<MultiValueMap<String, Object>> entity = new HttpEntity<>(multipartBody, headers);
+
+        try {
+            // 요청
+            ResponseEntity<String> response = restTemplate.postForEntity(uri, entity, String.class);
+
+            if (!response.hasBody()) {
+                throw new BaseException(FAILED_GET_PATTERN);
+            }
+
+            System.out.println(response.getBody());
+
+            JSONObject result = (JSONObject) jsonParser.parse(response.getBody());
+
+            int ptn = ((Long) result.get("pattern")).intValue();
+
+            return Pattern.fromNumber(ptn);
+        } catch (Exception e) {
+            throw new BaseException(SERVER_ERROR);
+        }
+    }
+
+    public List<ClotheInfo> getFeatures(MultipartFile image) throws BaseException, IOException {
+        List<ClotheInfo> clothes = new ArrayList<>();
+
+        // segment result 가져오기
+        List<SegClothe> segFiles = parsingSegmentResult(requestSegClothe(image));
+        for (SegClothe segFile : segFiles) {
+            byte[] segmentedImg = imageService.separateObject(image.getBytes(), segFile.getCoordinates());
+            List<String> colors = imageService.getMainColors(segmentedImg);
+            Pattern ptn = getPattern(segmentedImg);
+            ClotheInfo clotheInfo = ClotheInfo.builder()
+                    .type(segFile.getType().getNumber())
+                    .ptn(ptn.getNumber())
+                    .colors(colors)
+                    .build();
+
+            clothes.add(clotheInfo);
+        }
+        return clothes;
     }
 
     /** DefaultUser 처리용 override, 차후 User 구별 시 삭제 예정 **/
