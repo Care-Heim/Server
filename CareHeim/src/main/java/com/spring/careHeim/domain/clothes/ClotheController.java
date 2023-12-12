@@ -86,6 +86,10 @@ public class ClotheController {
             ClotheRequest clotheRequest = ClotheRequest.builder().type(type).ptn(ptn).colors(colors).features(features).build();
             ClotheResponse clotheResponse = clotheService.findClothe(clotheRequest);
 
+            if(clotheResponse == null) {
+                return new BaseResponse<>(CLOTHE_DONT_EXIST);
+            }
+
             return new BaseResponse<ClotheResponse>(SUCCESS);
         } catch (BaseException e) {
             return new BaseResponse<>(e.getStatus());
@@ -103,6 +107,19 @@ public class ClotheController {
             return new BaseResponse<>(e.getStatus());
         } catch (IOException e) {
             return new BaseResponse<>(FAILED_TO_LOGIN);
+        }
+    }
+
+    @ResponseBody
+    @PostMapping("/careInfos")
+    public BaseResponse<List<ClotheResponse>> testImage(@RequestParam(name = "image") MultipartFile image) throws Exception{
+        try {
+            System.out.println(image.getContentType());
+            List<ClotheResponse> clothes = clotheService.getCareInfos(image);
+
+            return new BaseResponse<>(clothes);
+        } catch (BaseException e) {
+            throw new RuntimeException(e);
         }
     }
 }

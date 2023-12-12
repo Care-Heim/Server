@@ -55,7 +55,7 @@ public class ColorBloc {
             if(this.avgV < 40) {
                 name = "어두운 ";
             } else if(this.avgV > 85) {
-                name = "밝은";
+                name = "밝은 ";
             }
             name += "회색";
         } else {

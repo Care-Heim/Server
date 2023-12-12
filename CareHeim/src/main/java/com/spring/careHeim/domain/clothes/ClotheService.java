@@ -69,11 +69,6 @@ public class ClotheService {
             throw new BaseException(DATABASE_ERROR);
         }
 
-        System.out.println("\n*****");
-        System.out.println(cnt);
-        System.out.println("****\n");
-
-
         if(cnt == 0) {
             return false;
         } else {
@@ -94,6 +89,7 @@ public class ClotheService {
         }
     }
 
+    @Transactional
     public void addCareInfos(User user, CareInfo careInfo) throws BaseException {
         User nowUser = userRepository.findById(user.getUserId()).orElseThrow(() -> new BaseException(BaseResponseStatus.USERS_DONT_EXIST));
 
@@ -104,6 +100,7 @@ public class ClotheService {
         clotheDocumentRepository.save(clotheDocument);
     }
 
+    @Transactional
     public ClotheResponse findRecentClothe(User user) throws BaseException {
         User nowUser = userRepository.findById(user.getUserId()).orElseThrow(() -> new BaseException(BaseResponseStatus.USERS_DONT_EXIST));
 
@@ -121,14 +118,18 @@ public class ClotheService {
                     .type(clotheDocument.getType())
                     .ptn(clotheDocument.getPattern())
                     .colors(clotheDocument.getColors())
-                    .features(clotheDocument.getFeatures()).build();
+                    .features(clotheDocument.getFeatures())
+                    .build();
+
+            System.out.println(clotheDocument.getClotheId());
 
             return clotheResponse;
         }
     }
 
+    @Transactional
     public ClotheResponse findClothe(User user, ClotheRequest clotheRequest) throws BaseException {
-        User nowUser = userRepository.findById(user.getUserId()).orElseThrow(() -> new BaseException(BaseResponseStatus.USERS_DONT_EXIST));
+        User nowUser = userRepository.findById(user.getUserId()).orElseThrow(() -> new BaseException(USERS_DONT_EXIST));
 
         List<ClotheDocument> clotheDocuments = clotheDocumentRepository.findClothes(nowUser.getUuid(), clotheRequest.getType(),
                                                                             clotheRequest.getPtn(),
@@ -137,7 +138,7 @@ public class ClotheService {
                                                                             clotheRequest.getNickname());
 
         if(clotheDocuments == null) {
-            throw new BaseException(CLOTHE_DONT_EXIST);
+            return null;
         } else if(clotheDocuments.size() > 1) {
             throw new BaseException(CLOTHE_DUPLICATE);
         }
@@ -147,7 +148,7 @@ public class ClotheService {
         ClotheResponse clotheResponse = ClotheResponse.builder()
                 .clotheId(String.valueOf(clotheDocument.getClotheId()))
                 .type(clotheDocument.getType())
-                .ptn(clotheDocument.getPattern())
+                .ptn(clotheDocument.getType())
                 .colors(clotheDocument.getColors())
                 .features(clotheDocument.getFeatures())
                 .nickname(clotheDocument.getNickname())
@@ -156,7 +157,59 @@ public class ClotheService {
         return clotheResponse;
     }
 
+    // 세탁 정보 요청
+    @Transactional
+    public List<ClotheResponse> getCareInfos(User user, MultipartFile image) throws BaseException, IOException {
+        List<ClotheInfo> clotheInfos = getFeatures(image);
+        List<ClotheResponse> result = new ArrayList<>(clotheInfos.size());
+
+        for(ClotheInfo clotheInfo : clotheInfos) {
+            ClotheRequest rq = ClotheRequest.builder()
+                    .type(clotheInfo.getType())
+                    .ptn(clotheInfo.getPtn())
+                    .colors(clotheInfo.getColors())
+            .build();
+
+            ClotheResponse response = ClotheResponse.builder()
+                    .type(clotheInfo.getType())
+                    .ptn(clotheInfo.getPtn())
+                    .colors(clotheInfo.getColors())
+                    .features(clotheInfo.getFeatures())
+                    .build();
+
+            List<ClotheDocument> clotheDocuments = clotheDocumentRepository.findClothes(user.getUuid(), rq.getType(),
+                    rq.getPtn(),
+                    rq.getColors().toArray(new String[0]),
+                    null,
+                    null);
+
+            if(clotheDocuments.isEmpty()) {
+                response.setStatus(ClotheStatus.CLOTHE_NOT_ENROLLED.getNumber());
+            } else if(clotheDocuments.size() > 1) {
+                response.setStatus(ClotheStatus.DUPLICATED_CLOTHE.getNumber());
+            } else {
+                response.setNickname(clotheDocuments.get(0).getNickname());
+
+                if(clotheDocuments.get(0).getCareInfos() == null){
+                    response.setStatus(ClotheStatus.CAREINFO_NOT_ENROLLED.getNumber());
+                } else {
+                    response.setStatus(ClotheStatus.ENROLLED.getNumber());
+                    response.setCareInfos(clotheDocuments.get(0).getCareInfos());
+                }
+            }
+
+            if(response.isCanDetectStain()) {
+                response.setHasStain(hasStain(clotheInfo.getImg()));
+            }
+
+            result.add(response);
+        }
+
+        return result;
+    }
+
     // Clothe Segmentation 요청
+    @Transactional
     public String requestSegClothe(MultipartFile image) throws BaseException, IOException {
         // 요청을 보낼 uri 작성
         String uri = "http://localhost:10002/clothes";
@@ -193,10 +246,12 @@ public class ClotheService {
 
             return response.getBody();
         } catch (Exception e) {
+            e.printStackTrace();
             throw new BaseException(SERVER_ERROR);
         }
     }
 
+    @Transactional
     public List<SegClothe> parsingSegmentResult(String segmentResult) throws BaseException {
         try {
             List<SegClothe> segClothes = null;
@@ -207,6 +262,7 @@ public class ClotheService {
         }
     }
 
+    @Transactional
     public Pattern getPattern(byte[] image) throws BaseException {
         // 요청을 보낼 uri 작성
         String uri = "http://localhost:10002/patterns";
@@ -253,6 +309,7 @@ public class ClotheService {
         }
     }
 
+    @Transactional
     public List<ClotheInfo> getFeatures(MultipartFile image) throws BaseException, IOException {
         List<ClotheInfo> clothes = new ArrayList<>();
 
@@ -266,6 +323,7 @@ public class ClotheService {
                     .type(segFile.getType().getNumber())
                     .ptn(ptn.getNumber())
                     .colors(colors)
+                    .img(segmentedImg)
                     .build();
 
             clothes.add(clotheInfo);
@@ -273,7 +331,8 @@ public class ClotheService {
         return clothes;
     }
 
-    public Boolean hasStain(byte[] image) throws BaseException{
+    @Transactional
+    public Boolean hasStain(byte[] image) throws BaseException {
         // 요청을 보낼 uri 작성
         String uri = "http://localhost:10002/stains";
 
@@ -321,23 +380,33 @@ public class ClotheService {
 
     /** DefaultUser 처리용 override, 차후 User 구별 시 삭제 예정 **/
 
+    @Transactional
     public void addNewClothe(ClotheRequest clotheInfo) throws BaseException {
         User defaultUser = userService.getDefaultUser();
         addNewClothe(defaultUser, clotheInfo);
     }
 
+    @Transactional
     public void addCareInfos(CareInfo careInfo) throws BaseException {
         User defaultuser = userService.getDefaultUser();
         addCareInfos(defaultuser, careInfo);
     }
 
+    @Transactional
     public ClotheResponse findRecentClothe() throws BaseException {
         User defaultuser = userService.getDefaultUser();
         return findRecentClothe(defaultuser);
     }
 
+    @Transactional
     public ClotheResponse findClothe(ClotheRequest clotheRequest) throws BaseException {
         User defaultuser = userService.getDefaultUser();
         return findClothe(defaultuser, clotheRequest);
+    }
+
+    @Transactional
+    public List<ClotheResponse> getCareInfos(MultipartFile image) throws BaseException, IOException {
+        User defaultuser = userService.getDefaultUser();
+        return getCareInfos(defaultuser, image);
     }
 }
