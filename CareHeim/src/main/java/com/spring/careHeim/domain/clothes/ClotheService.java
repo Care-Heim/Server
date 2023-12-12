@@ -273,6 +273,52 @@ public class ClotheService {
         return clothes;
     }
 
+    public Boolean hasStain(byte[] image) throws BaseException{
+        // 요청을 보낼 uri 작성
+        String uri = "http://localhost:10002/stains";
+
+        // 응답을 주고 받을 template 생성
+        RestTemplate restTemplate = new RestTemplate();
+
+        // Header 설정
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+        headers.setAccept(Collections.singletonList(MediaType.APPLICATION_JSON));
+
+        // Part 세팅
+        MultiValueMap<String, Object> multipartBody = new LinkedMultiValueMap<>();
+
+        // image 세팅
+        multipartBody.add("image", new ByteArrayResource(image) {
+            @Override
+            public String getFilename() {
+                return UUID.randomUUID().toString(); // 이미지 파일명 설정
+            }
+        });
+
+        // HttpEntity 설정
+        HttpEntity<MultiValueMap<String, Object>> entity = new HttpEntity<>(multipartBody, headers);
+
+        try {
+            // 요청
+            ResponseEntity<String> response = restTemplate.postForEntity(uri, entity, String.class);
+
+            if (!response.hasBody()) {
+                throw new BaseException(FAILED_GET_STAIN_INFO);
+            }
+
+            System.out.println(response.getBody());
+
+            JSONObject result = (JSONObject) jsonParser.parse(response.getBody());
+
+            Boolean hasStain = (Boolean) result.get("hasStain");
+
+            return hasStain;
+        } catch (Exception e) {
+            throw new BaseException(SERVER_ERROR);
+        }
+    }
+
     /** DefaultUser 처리용 override, 차후 User 구별 시 삭제 예정 **/
 
     public void addNewClothe(ClotheRequest clotheInfo) throws BaseException {
